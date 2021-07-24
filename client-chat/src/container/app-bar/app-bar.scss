@@ -1,0 +1,40 @@
+.app-bar {
+  background-color: #F5F5F5;
+  .ant-menu {
+    height: 100%;
+    padding-top: 5px;
+    .ant-menu-item {
+      padding: unset !important;
+      margin: unset;
+      height: unset !important;
+      &:after {
+        right: unset;
+        left: 3px;
+        border-right-color: #464775;
+        border-right-width: 2px;
+      }
+
+      .ant-menu-title-content{
+        display: flex;
+        padding: 1rem 2rem;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-direction: column;
+        line-height: 1;
+        color: #616161;
+        .bar-icon {
+          font-size: 2.4rem;
+          color: #616161;
+        }
+      }
+
+      &.ant-menu-item-selected {
+        background-color: unset !important;
+        .ant-menu-title-content{
+         color: #464775;
+        }
+      }
+    }
+  }
+}

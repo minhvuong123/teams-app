@@ -1,0 +1,11 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .app-content {
+    display: flex;
+    flex: 1;
+    height: calc(100% - 4.8rem);
+  }
+}
+
