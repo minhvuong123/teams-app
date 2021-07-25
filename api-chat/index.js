@@ -13,9 +13,13 @@ app.use(morgan("common"));
 app.use('/static', express.static('public'));
 
 // routes
-const users = require('./routes/user/user.route');;
+const users = require('./routes/user/user.route');
+const conversation = require('./routes/conversation/conversation.route');
+const messages = require('./routes/message/message.route');
 
 app.use('/users', users);
+app.use('/conversation', conversation);
+app.use('/messages', messages);
 
 // mongoose connect
 mongoose.connect('mongodb://localhost/teams-app', { useNewUrlParser: true, useUnifiedTopology: true });

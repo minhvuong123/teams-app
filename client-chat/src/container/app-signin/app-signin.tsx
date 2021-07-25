@@ -3,10 +3,14 @@ import { Form, Input, Button,  } from 'antd';
 import { NavLink } from 'react-router-dom';
 import { API_LINK } from 'shared/const';
 import axios from 'axios';
+import { connect } from 'react-redux';
+
+import jwt from 'jsonwebtoken';
 
 import './app-signin.scss';
+import { setUser } from 'shared/redux/actions';
 
-function AppSignIn({ history }: any) {
+function AppSignIn({ history, setUser }: any) {
 
   async function onFinish(values: any){
     const registerUrl = `${API_LINK}/users/sign-in`;
@@ -16,9 +20,13 @@ function AppSignIn({ history }: any) {
     const { token } = data || {};
 
     if (token) {
-      localStorage.setItem('token', token);
       window.sessionStorage.setItem('token', token);
-      history.push('/');
+      jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
+        if (!err) {
+          setUser(decoded);
+          history.push('/');
+        }
+      });
     }
   };
 
@@ -64,4 +72,10 @@ function AppSignIn({ history }: any) {
   );
 }
 
-export default AppSignIn;
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    setUser: (user: any) => dispatch(setUser(user))
+  }
+}
+
+export default connect(null, mapDispatchToProps)(AppSignIn);

@@ -3,6 +3,8 @@ import { useState } from 'react';
 import axios from 'axios';
 import { isEmpty } from 'lodash';
 
+import jwt from 'jsonwebtoken';
+
 import './search-bar.scss';
 import { API_LINK } from 'shared/const';
 
@@ -15,8 +17,8 @@ function SearchBar() {
     const stringText = event.target.value;
     setText(stringText);
 
-    const getUserUrl = `${API_LINK}/users/filter`;
-    const usersResult = await axios.post(getUserUrl, { value: stringText });
+    const userUrl = `${API_LINK}/users/filter`;
+    const usersResult = await axios.post(userUrl, { value: stringText });
 
     const { data } = usersResult || {};
     const { users } = data || {};
@@ -24,6 +26,20 @@ function SearchBar() {
     if (users) {
       setDataFinds(users);
     }
+  }
+
+  async function createConversation(item: any): Promise<void> {
+    const token = window.sessionStorage.getItem('token');
+    jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
+      if (!err) {
+        const conversationUrl = `${API_LINK}/conversation/create`;
+        const conversationResult = await axios.post(conversationUrl, { conversation : { members: [decoded._id, item._id] }});
+
+        if (conversationResult) {
+
+        }
+      }
+    });
   }
 
   return (
@@ -36,7 +52,7 @@ function SearchBar() {
             bordered
             dataSource={dataFinds}
             renderItem={item => (
-              <List.Item className="active">
+              <List.Item className="active" onClick={() => createConversation(item)}>
                 <div className="item-avatar"></div>
                 <span className="item-text">{(item as any).user_name}</span>
               </List.Item>

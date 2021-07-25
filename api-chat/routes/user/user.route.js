@@ -3,7 +3,7 @@ const router = express.Router();
 const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { rootPath, configToken, removeAccents } = require('../../utils');
+const { rootPath, configToken } = require('../../utils');
 const { v1: uuid } = require('uuid');
 const userSchema = require('../../models/user/user.model');
 const refreshTokenSchema = require('../../models/refreshToken/refreshToken.model');
@@ -40,9 +40,10 @@ router.post('/filter', async function (req, res) {
         { user_email: { $regex: '.*' + stringText + '.*', $options: 'i' } }
       ]
     }
-    const users = await userSchema.where(searchObject)
+    const users = await userSchema.where(searchObject);
     const usersResult = users.map(user => {
       return {
+        _id: user._id,
         user_name: user.user_name,
         user_avatar: user.user_avatar,
         user_email: user.user_email
@@ -157,11 +158,21 @@ router.post('/sign-in', async function (req, res, next) {
     if (Object.keys(user).length > 0) {
       const match = await bcrypt.compare(user_password, user.user_password);
       if (match) {
-        const token = jwt.sign({...user}, configToken.secretToken, { expiresIn: configToken.tokenLife });
+        const userPopulate = {
+          _id: user._id,
+          user_name: user.user_name,
+          user_avatar: user.user_avatar,
+          user_role: user.user_role,
+          user_email: user.user_email,
+          user_phone: user.user_phone,      
+          createdAt: user.createdAt
+        };
+
+        const token = jwt.sign({...userPopulate}, configToken.secretToken, { expiresIn: configToken.tokenLife });
         const refreshTokenExist = await refreshTokenSchema.findOne({user_id: user._id});
 
         if (!refreshTokenExist || Object.keys(refreshTokenExist) <= 0) {
-          refreshToken = jwt.sign({...user}, configToken.refreshTokenSecret);
+          refreshToken = jwt.sign({...userPopulate}, configToken.refreshTokenSecret);
 
           // save refresh token into db
           const refreshTokenModel = new refreshTokenSchema({ user_id: user._id, token: refreshToken });

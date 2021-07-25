@@ -5,12 +5,15 @@ const MessageSchema = new mongoose.Schema(
   {
     conversationId: {
       type: String,
+      require: true
     },
-    sender: {
+    senderId: {
       type: String,
+      require: true
     },
     text: {
       type: String,
+      require: true
     },
   },
   { timestamps: true }

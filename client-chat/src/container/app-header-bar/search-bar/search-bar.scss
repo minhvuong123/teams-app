@@ -1,6 +1,7 @@
 .search-bar {
   height: 3.2rem;
   max-width: calc(100% - 85.6rem);
+  min-width: 450px;
   flex: 1;
 
   .search-bar-input {
@@ -15,6 +16,8 @@
   }
 
   .search-list {
+    position: relative;
+    z-index: 1000;
     .ant-list {
       background-color: #fff;
       .ant-list-items {
