@@ -5,3 +5,7 @@ export const USER = {
 export const CONVERSATION = {
   SET: 'CONVERSATION_SET'
 }
+
+export const SOCKET = {
+  SET: 'SOCKET_SET'
+}

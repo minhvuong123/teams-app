@@ -14,23 +14,49 @@ import { isEmpty } from 'lodash';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 
-TimeAgo.addDefaultLocale(en);
+TimeAgo.addLocale(en);
 
 const timeAgo = new TimeAgo('en-US');
 
-function ChatContent({ location }: any) {
+function ChatContent({ location, socket }: any) {
   const [text, setText] = useState('');
   const [messages, setMessages] = useState([] as any);
+  const [arrivalMessage, setArrivalMessage] = useState({} as any);
   const [owner, setOwner] = useState({} as any);
   const [modules, setModules] = useState({ toolbar: false });
-
   const { conversation } = location.state;
+
   const reactQuillRef = useRef();
+
+  // listen to arrival message
+  useEffect(() => {
+    socket.on('client-get-message', (message: any) => {
+      setArrivalMessage(message);
+    })
+
+    return () => {}
+  }, []);
+
+  // update arrival message to messsages
+  useEffect(() => {
+    if(!isEmpty(arrivalMessage) && owner._id !== arrivalMessage.sender._id) {
+      setMessages((prev: any) => [...prev, arrivalMessage]);
+    }
+
+    return () => {}
+  }, [arrivalMessage]);
 
   useEffect(() => {
     const token = window.sessionStorage.getItem('token');
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
+
+        // emit leave-room currently
+        socket.emit('leave-room');
+
+        // emit join-room flat
+        socket.emit('join-room', { conversationId: conversation._id, userId: decoded._id });
+
         setOwner(decoded);
 
         const messagesUrl = `${API_LINK}/messages/${conversation._id}`;
@@ -46,6 +72,7 @@ function ChatContent({ location }: any) {
       }
     });
 
+    return () => {}
   }, [conversation._id]);
 
   async function handleChange(value: any) {
@@ -95,7 +122,40 @@ function ChatContent({ location }: any) {
         const { status } = data || {};
 
         if (status === 'success') {
+          const time = new Date();
+          time.setSeconds(0);
+          time.setMilliseconds(0);
+          const createdAtMinutes = time.getTime();
 
+          const message = {
+            conversationId: conversation._id,
+            createdAt: new Date().getTime(),
+            createdAtRound: createdAtMinutes,
+            messages: [text],
+            sender: {
+              user_avatar: owner.user_avatar,
+              user_name: owner.user_name,
+              _id: owner._id,
+            }
+          }
+
+          const messagesTemp = messages;
+ 
+          if (
+            !isEmpty(messagesTemp) 
+            && messagesTemp[messages.length - 1].createdAtRound === createdAtMinutes
+            && messagesTemp[messages.length - 1].sender._id === owner._id
+          ) { // push message into conversation with [0, 1 minute];
+            messagesTemp[messages.length - 1].messages.push(text);
+            setText('');
+            setMessages(messagesTemp);
+          } else {
+            messagesTemp.push(message);
+            setText('');
+            setMessages(messagesTemp);
+          }
+
+          socket.emit('client-send-message', message);
         }
       }
     }
@@ -126,7 +186,9 @@ function ChatContent({ location }: any) {
       const createdAtMinutes = time.getTime();
 
       // Try to get existing message group
-      const currentGroup = groupMessageByTime.filter((msgGrp: any) => msgGrp.createdAt === createdAtMinutes);
+      const currentGroup = groupMessageByTime.filter(
+        (msgGrp: any) => msgGrp.createdAtRound === createdAtMinutes && message.sender._id === msgGrp.sender._id
+      );
 
       // If we've got the existing group, add the message, otherwise create a new group
       if (currentGroup.length) {
@@ -135,10 +197,11 @@ function ChatContent({ location }: any) {
       } else {
         groupMessageByTime.push({
           conversationId: message.conversationId,
-          senderId: message.senderId,
+          sender: message.sender,
           // texts: [message], 
           messages: [message.text],
-          createdAt: createdAtMinutes
+          createdAtRound: createdAtMinutes,
+          createdAt: message.createdAt
         });
       }
     });
@@ -167,17 +230,17 @@ function ChatContent({ location }: any) {
             {
               !isEmpty(messages) && !isEmpty(owner)
               && messages.map((message: any) => {
-                if (message.senderId === owner._id) {
+                if (message.sender._id === owner._id) {
                   return (
                     <div key={message.createdAt} className="owner-message">
                       <div className="message-body">
                         <div className="message-body-title">
-                          <span className="message-timestamp">{timeAgo.format(new Date(message.createdAt))}</span>
+                          <span className="message-timestamp">{timeAgo.format(new Date(message.createdAtRound))}</span>
                           <div className="message-emoji"></div>
                           <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
                         </div>
                         <div className="message-body-content"
-                          dangerouslySetInnerHTML={{ __html: message.messages.splice(1, message.messages.length).join('') }}>
+                          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
                         </div>
                       </div>
                     </div>
@@ -188,15 +251,13 @@ function ChatContent({ location }: any) {
                       <div className="message-avatar"></div>
                       <div className="message-body">
                         <div className="message-body-title">
-                          <span className="message-name">Nguyễn Võ Minh Vương</span>
-                          <span className="message-timestamp">9:37 PM</span>
+                          <span className="message-name">{message.sender.user_name}</span>
+                          <span className="message-timestamp">{timeAgo.format(new Date(message.createdAt))}</span>
                           <div className="message-emoji"></div>
+                          <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
                         </div>
-                        <div className="message-body-content">
-                          <p className="message-text">Chát như con cá thát lát ...  Chát như con cá thát lát ...  Chát như con cá thát lát ...  Chát như con cá thát lát ...  Chát như con cá thát lát ...</p>
-                          <p className="message-text">Chát như con cá thát lát ...</p>
-                          <p className="message-text">Chát như con cá thát lát ... Chát như con cá thát lát ...</p>
-                          <p className="message-text">Chát như con cá thát lát ...</p>
+                        <div className="message-body-content"
+                          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
                         </div>
                       </div>
                     </div>
@@ -228,9 +289,10 @@ function ChatContent({ location }: any) {
   );
 }
 
-const mapStateToProps = ({ conversationStore }: any) => {
+const mapStateToProps = ({ conversationStore, socketStore }: any) => {
   return {
-    conversation: conversationStore.conversation
+    conversation: conversationStore.conversation,
+    socket: socketStore.socket
   }
 }
 

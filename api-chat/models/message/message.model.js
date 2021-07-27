@@ -1,5 +1,6 @@
 
 const mongoose = require("mongoose");
+const userSchema = require('../user/user.model');
 
 const MessageSchema = new mongoose.Schema(
   {
@@ -7,8 +8,8 @@ const MessageSchema = new mongoose.Schema(
       type: String,
       require: true
     },
-    senderId: {
-      type: String,
+    sender: {
+      type: userSchema.schema,
       require: true
     },
     text: {

@@ -14,7 +14,7 @@ import { NavLink } from 'react-router-dom';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 
-TimeAgo.addDefaultLocale(en);
+TimeAgo.addLocale(en);
 
 const timeAgo = new TimeAgo('en-US');
 
@@ -23,11 +23,14 @@ const { Panel } = Collapse;
 function ChatBar() {
   const [isFilter, setIsFilter] = useState(false);
   const [conversation, setConversation] = useState([] as any);
+  const [currentUser, setCurrentUser] = useState({} as any);
 
   useEffect(() => {
     const token = window.sessionStorage.getItem('token');
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
+        setCurrentUser(decoded);
+        
         const conversationUrl = `${API_LINK}/conversation/${decoded._id}`;
         const conversationResult = await axios.get(conversationUrl);
 
@@ -52,7 +55,8 @@ function ChatBar() {
       case 1: 
         return members[0].user_name;
       case 2:
-        return members[1].user_name;
+        const friend = members.filter((member: any) => member._id !== currentUser._id);
+        return friend[0].user_name;
       default: 
         return '' 
     }

@@ -24,7 +24,7 @@ function AppSignIn({ history, setUser }: any) {
       jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
         if (!err) {
           setUser(decoded);
-          history.push('/');
+          history.push('/conversation');
         }
       });
     }

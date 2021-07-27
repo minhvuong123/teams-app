@@ -1,12 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const messageSchema = require('../../models/message/message.model');
+const userSchema = require('../../models/user/user.model');
+const mongoose = require('mongoose');
 
 router.get('/:id', async function (req, res) {
   try {
     const { id } = req.params;
 
-    const messages = await messageSchema.find({ conversationId: id });
+    const messages = await messageSchema.find({ conversationId: id })
+                    .select(`
+                      conversationId 
+                      text 
+                      createdAt
+                      sender._id 
+                      sender.user_name 
+                      sender.user_avatar
+                    `);
 
     if (messages) {
       res.status(200).json({ messages });
@@ -25,15 +35,19 @@ router.post('/', async function (req, res) {
   
     const { conversationId, senderId, text } = req.body.message;
 
-    const messageModel = await messageSchema({ conversationId, senderId, text });
+    const user = await userSchema.findOne({ _id: mongoose.Types.ObjectId(senderId)})
 
-    const result = await messageModel.save();
+    if (user) {
+      const messageModel = new messageSchema({ conversationId, sender: user, text });
 
-    if (Object.keys(result).length > 0) {
-      res.status(200).json({ status: 'success' });
-      return;
-    } 
+      const result = await messageModel.save();
 
+      if (Object.keys(result).length > 0) {
+        res.status(200).json({ status: 'success' });
+        return;
+      } 
+    }
+  
     res.status(404).json({ message: 'Information is error' });
 
   } catch (error) {

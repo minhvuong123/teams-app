@@ -31,8 +31,8 @@ export const RenderRoutes = ({ routes }) => {
 
 const Routes = [
   {
-    path: '/',
-    keyPath: '/',
+    path: '/conversation',
+    keyPath: '/conversation',
     exact: false,
     component: AppMain,
     nested: [
@@ -43,6 +43,12 @@ const Routes = [
         component: ChatContent,
       }
     ]
+  },
+  {
+    path: '/',
+    keyPath: '/',
+    exact: true,
+    component: AppSignIn
   },
   {
     path: '/sign-in',

@@ -8,7 +8,7 @@ function AppContentChat() {
   const [nestedRoutes, setNestedRoutes] = useState([]);
 
   useEffect(() => {
-    const nestRoutes = Routes.find(route => route.path === '/')?.nested;
+    const nestRoutes = Routes.find(route => route.path === '/conversation')?.nested;
     setNestedRoutes(nestRoutes as any || []);
     return () => {}
   }, [])
