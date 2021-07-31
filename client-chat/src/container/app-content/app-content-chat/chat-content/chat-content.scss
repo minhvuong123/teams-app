@@ -76,6 +76,13 @@
         -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
         background-color: #e2e2e2;
       }
+      .message-content {
+        flex: 1;
+        margin: auto;
+        max-width: 90.8rem;
+        width: 100%;
+        overflow: hidden;
+      }
     }
     .message-new {
       max-width: 90.8rem;

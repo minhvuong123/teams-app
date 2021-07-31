@@ -91,7 +91,11 @@ function ChatContent({ location, socket, setMessageStore }: any) {
   }, [conversation._id]);
   
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollRef.current?.scrollIntoView({
+      block: 'end',
+      behavior: 'smooth',
+      inline: 'center'
+    });
 
     return () => {}
   }, [messages]);
@@ -205,12 +209,10 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             {
               !isEmpty(messages) && !isEmpty(currentUser)
               && messages.map((message: any) => (
-                <div ref={scrollRef as any} key={message.createdAt}>
-                  <Message  message={message} currentUser={currentUser} />
-                </div>
+                  <Message key={message.createdAt} message={message} currentUser={currentUser} />
               ))
             }
-
+            <div ref={scrollRef as any}></div>
           </div>
         </div>
         <div className="message-new">
