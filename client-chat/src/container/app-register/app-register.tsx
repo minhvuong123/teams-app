@@ -13,9 +13,9 @@ function AppRegister({ history } : any) {
     const registerResult = await axios.post(registerUrl, { user: values});
 
     const { data } = registerResult || {};
-    const { user } = data || {};
+    const { status } = data || {};
 
-    if (user) {
+    if (status === 'success') {
       history.push('/sign-in');
     }
   };
@@ -30,6 +30,8 @@ function AppRegister({ history } : any) {
           form={form}
           layout="vertical"
           initialValues={{ 
+            user_firstname: '',
+            user_lastname: '',
             user_email: '',
             user_phone: '',
             user_password: ''
@@ -37,18 +39,36 @@ function AppRegister({ history } : any) {
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
         >
-          <Form.Item
-            name="user_email"
-            label="Email"
-            rules={[{ required: true, message: 'Enter your email!' }]}
-          >
-            <Input />
-          </Form.Item>
+
+          <div className="app-form-group">
+            <Form.Item
+              name="user_firstname"
+              label="First Name"
+              rules={[{ required: true, message: 'Enter your first name!' }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="user_lastname"
+              label="Last Name"
+              rules={[{ required: true, message: 'Enter your last name!' }]}
+            >
+              <Input />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="user_phone"
             label="Phone"
             rules={[{ required: true, message: 'Enter your phone!' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="user_email"
+            label="Email"
+            rules={[{ required: true, message: 'Enter your email!' }]}
           >
             <Input />
           </Form.Item>

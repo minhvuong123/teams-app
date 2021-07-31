@@ -3,6 +3,7 @@ import AppMain from 'container/app-main/app-main';
 import { Route, Switch } from 'react-router-dom';
 import AppRegister from 'container/app-register/app-register';
 import ChatContent from 'container/app-content/app-content-chat/chat-content/chat-content';
+import AppNotFound from 'container/app-not-found/app-not-found';
 
 const RouteWithSubRoutes = (route) => {
   return (
@@ -24,7 +25,7 @@ export const RenderRoutes = ({ routes }) => {
           return <RouteWithSubRoutes key={route.keyPath} {...route} />
         })
       }
-      <Route component={() => <h1>Not Found!</h1>} />
+      <Route component={() => <AppNotFound />} />
     </Switch>
   );
 }

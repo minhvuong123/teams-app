@@ -2,6 +2,9 @@
   width: 36rem;
   background-color: #F5F5F5;
   box-shadow: -5px 0 5px -5px #c0c0c0 !important;
+  @media screen and (max-width: 1024px) {
+    width: 24rem;
+  }
   .chat-bar-header {
     height: 6rem;
     padding: 0 20px;
@@ -101,13 +104,21 @@
           min-width: 32px;
           height: 32px;
           border-radius: 100%;
-          background-color: #841c1c;
           margin-right: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 32;
+          color: #fff;
         }
         .item-group {
           color: #000;
           line-height: 1;
           flex-grow: 1;
+          max-width: 87%;
+          @media screen and (max-width: 1024px) {
+            max-width: 80%;
+          }
           .group-title {
             font-size: 15px;
             display: flex;
@@ -124,8 +135,15 @@
               white-space: nowrap;
             }
           }
-          .item-preview {
+          .item-wrap {
             font-size: 12px;
+            display: flex;
+            .text-owner {
+              margin-right: 5px;
+            }
+            .item-review {
+              flex-grow: 1;
+            }
           }
         }
       }

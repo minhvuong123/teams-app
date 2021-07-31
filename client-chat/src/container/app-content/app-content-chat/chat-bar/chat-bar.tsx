@@ -4,6 +4,7 @@ import { RiFilter3Line } from "react-icons/ri";
 import { IoMdClose } from "react-icons/io";
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import { connect } from 'react-redux';
 import { API_LINK } from 'shared/const';
 
 import './chat-bar.scss';
@@ -13,6 +14,8 @@ import { NavLink } from 'react-router-dom';
 // English.
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
+import { MessageModel } from 'shared/model';
+import { getAvatarColor, getAvatarText, getNameChanel } from 'shared/calculator';
 
 TimeAgo.addLocale(en);
 
@@ -20,17 +23,18 @@ const timeAgo = new TimeAgo('en-US');
 
 const { Panel } = Collapse;
 
-function ChatBar() {
+function ChatBar({ messageStore }: any) {
   const [isFilter, setIsFilter] = useState(false);
   const [conversation, setConversation] = useState([] as any);
   const [currentUser, setCurrentUser] = useState({} as any);
+  const [lastMessage, setLastMessage] = useState<MessageModel>({});
 
   useEffect(() => {
     const token = window.sessionStorage.getItem('token');
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
         setCurrentUser(decoded);
-        
+
         const conversationUrl = `${API_LINK}/conversation/${decoded._id}`;
         const conversationResult = await axios.get(conversationUrl);
 
@@ -42,24 +46,36 @@ function ChatBar() {
         }
       }
     });
+
     return () => { }
   }, [])
+
+  useEffect(() => {
+    setLastMessage(messageStore);
+
+    return () => { }
+  }, [messageStore])
 
   function changeFilter() {
     setIsFilter(!isFilter);
   }
 
-  function getNameConversation(conversation: any) {
-    const { members } = conversation;
-    switch(members.length) {
-      case 1: 
-        return members[0].user_name;
-      case 2:
-        const friend = members.filter((member: any) => member._id !== currentUser._id);
-        return friend[0].user_name;
-      default: 
-        return '' 
+  function getRenderLastMessage(message: MessageModel) {
+    const messages = message.messages || [];
+    if (!isEmpty(message)) {
+      return (
+        lastMessage.sender?._id === currentUser._id
+        ? <div className="item-wrap">
+          <span className="text-owner">You:</span> 
+          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${messages[messages.length - 1]}` }} />
+        </div>
+        : <div className="item-wrap">
+          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${messages[messages.length - 1]}` }} />
+        </div>
+      )
     }
+
+    return '';
   }
 
   return (
@@ -87,7 +103,7 @@ function ChatBar() {
             </div>
         }
       </div>
-      
+
       <div className="chat-bar-content">
         <Collapse bordered={false} accordion defaultActiveKey={['1']}>
           <Panel header={<div className="ant-collapse-text">Recent</div>} key="1">
@@ -95,23 +111,27 @@ function ChatBar() {
               {
                 !isEmpty(conversation)
                 && conversation.map((conversation: any) => {
-                  return <NavLink 
-                            key={conversation._id} 
-                            to={{
-                              pathname: `/conversation/${conversation._id}`, 
-                              state: { conversation }
-                            }}
-                            className="chat-list-item"
-                          >
-                            <span className="item-avatar"></span>
-                            <div className="item-group">
-                              <div className="group-title">
-                                <span className="item-name">{getNameConversation(conversation)}</span>
-                                <span className="item-timestamp">{timeAgo.format(new Date(conversation.createdAt))}</span>
-                              </div>
-                              <span className="item-preview">message chat</span>
-                            </div>
-                          </NavLink>
+                  return <NavLink
+                    key={conversation._id}
+                    to={{
+                      pathname: `/conversation/${conversation._id}`,
+                      state: { conversation }
+                    }}
+                    className="chat-list-item"
+                  >
+                    <span className="item-avatar" style={{backgroundColor: getAvatarColor(conversation.members, currentUser)}}>
+                      { getAvatarText(conversation.members, currentUser) }
+                    </span>
+                    <div className="item-group">
+                      <div className="group-title">
+                        <span className="item-name">{ conversation && getNameChanel(conversation, currentUser)}</span>
+                        <span className="item-timestamp">{timeAgo.format(new Date(conversation.createdAt))}</span>
+                      </div>
+                      {
+                        !isEmpty(lastMessage) && getRenderLastMessage(lastMessage)
+                      }
+                    </div>
+                  </NavLink>
                 })
               }
             </div>
@@ -122,4 +142,10 @@ function ChatBar() {
   );
 }
 
-export default ChatBar;
+const mapStateToProps = ({ messageStore }: any) => {
+  return {
+    messageStore: messageStore.message,
+  }
+}
+
+export default connect(mapStateToProps, null)(ChatBar);

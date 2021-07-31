@@ -8,7 +8,21 @@ router.get('/:id', async function (req, res) {
   try {
     const { id } = req.params;
 
-    const conversation = await conversationSchema.where({"members._id": {"$in": [mongoose.Types.ObjectId(id)] }});
+    const conversation = await conversationSchema.where({"members._id": {"$in": [mongoose.Types.ObjectId(id)] }})
+                                .select(`
+                                  _id 
+                                  name 
+                                  members._id
+                                  members.user_firstname
+                                  members.user_lastname
+                                  members.user_fullname
+                                  members.user_avatar
+                                  members.user_email
+                                  members.user_phone
+                                  members.user_background_color
+                                  members.createdAt
+                                  createdAt
+                                `);
 
     if (conversation) {
       res.status(200).json({ conversation: conversation || [] });

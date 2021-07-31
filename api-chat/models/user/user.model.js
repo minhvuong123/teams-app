@@ -2,7 +2,15 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    user_name: {
+    user_firstname: {
+      type: String,
+      default: ''
+    },
+    user_lastname: {
+      type: String,
+      default: ''
+    },
+    user_fullname: {
       type: String,
       default: ''
     },
@@ -25,6 +33,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'normal'
     },
+    user_background_color: {
+      type: String,
+      default: ''
+    }
   },
   { 
     timestamps: true 

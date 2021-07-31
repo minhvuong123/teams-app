@@ -54,7 +54,7 @@ function SearchBar() {
             renderItem={item => (
               <List.Item className="active" onClick={() => createConversation(item)}>
                 <div className="item-avatar"></div>
-                <span className="item-text">{(item as any).user_name}</span>
+                <span className="item-text">{(item as any).user_fullname}</span>
               </List.Item>
             )}
           />

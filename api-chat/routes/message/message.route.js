@@ -13,9 +13,15 @@ router.get('/:id', async function (req, res) {
                       conversationId 
                       text 
                       createdAt
-                      sender._id 
-                      sender.user_name 
+                      sender._id
+                      sender.user_firstname
+                      sender.user_lastname
+                      sender.user_fullname
                       sender.user_avatar
+                      sender.user_email
+                      sender.user_phone
+                      sender.user_background_color
+                      sender.createdAt
                     `);
 
     if (messages) {

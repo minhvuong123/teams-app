@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { rootPath, configToken } = require('../../utils');
 const { v1: uuid } = require('uuid');
+const { TinyColor } = require('@ctrl/tinycolor');
+const { random } = require('@ctrl/tinycolor');
 const userSchema = require('../../models/user/user.model');
 const refreshTokenSchema = require('../../models/refreshToken/refreshToken.model');
 
@@ -36,7 +38,9 @@ router.post('/filter', async function (req, res) {
 
     const searchObject = {
       '$or': [
-        { user_name: {  $regex: '.*' + stringText + '.*', $options: 'i' } },
+        { user_firstname: {  $regex: '.*' + stringText + '.*', $options: 'i' } },
+        { user_lastname: {  $regex: '.*' + stringText + '.*', $options: 'i' } },
+        { user_fullname: {  $regex: '.*' + stringText + '.*', $options: 'i' } },
         { user_email: { $regex: '.*' + stringText + '.*', $options: 'i' } }
       ]
     }
@@ -44,7 +48,7 @@ router.post('/filter', async function (req, res) {
     const usersResult = users.map(user => {
       return {
         _id: user._id,
-        user_name: user.user_name,
+        user_fullname: user.user_fullname,
         user_avatar: user.user_avatar,
         user_email: user.user_email
       }
@@ -131,15 +135,21 @@ router.patch('/', async function (req, res) {
 
 router.post('/register', async function (req, res) {
   try {
-    const user_email = req.body.user.user_email;
-    const user_phone = req.body.user.user_phone;
+    const { user_firstname, user_lastname, user_email, user_phone } = req.body.user;
+    const user_fullname = `${user_lastname} ${user_firstname}`;
     const user_password = bcrypt.hashSync(req.body.user.user_password, 10);
-    const user = new userSchema({ user_email, user_phone, user_password });
+    let color = new TinyColor(random().originalInput);
+
+    while (color.isLight()) {
+      color = new TinyColor(random().originalInput);
+    }
+
+    const user = new userSchema({ user_firstname, user_lastname, user_fullname, user_email, user_phone, user_password, user_background_color: `#${color.toHex()}` });
 
     const result = await user.save();
 
     if (Object.keys(result).length > 0) {
-      res.status(200).json({ user: result });
+      res.status(200).json({ status: 'success' });
     } else {
       res.status(404).json({ message: 'Information is error' });
     }

@@ -9,3 +9,7 @@ export const CONVERSATION = {
 export const SOCKET = {
   SET: 'SOCKET_SET'
 }
+
+export const MESSAGE = {
+  SET: 'MESSAGE_SET'
+}

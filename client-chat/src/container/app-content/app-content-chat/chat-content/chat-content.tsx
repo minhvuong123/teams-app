@@ -10,41 +10,55 @@ import './chat-content.scss';
 import { API_LINK } from 'shared/const';
 import { isEmpty } from 'lodash';
 
-// English.
-import TimeAgo from 'javascript-time-ago';
-import en from 'javascript-time-ago/locale/en';
+import { MessageModel } from 'shared/model';
+import { setMessage } from 'shared/redux/actions';
+import Message from './message/message';
+import { getAvatarColor, getAvatarText, getNameChanel, groupMessage } from 'shared/calculator';
 
-TimeAgo.addLocale(en);
 
-const timeAgo = new TimeAgo('en-US');
-
-function ChatContent({ location, socket }: any) {
+function ChatContent({ location, socket, setMessageStore }: any) {
   const [text, setText] = useState('');
-  const [messages, setMessages] = useState([] as any);
+  const [messages, setMessages] = useState<MessageModel[]>([]);
   const [arrivalMessage, setArrivalMessage] = useState({} as any);
-  const [owner, setOwner] = useState({} as any);
+  const [currentUser, setCurrentUser] = useState({} as any);
   const [modules, setModules] = useState({ toolbar: false });
   const { conversation } = location.state;
 
   const reactQuillRef = useRef();
+  const scrollRef = useRef<HTMLDivElement>();
 
   // listen to arrival message
   useEffect(() => {
-    socket.on('client-get-message', (message: any) => {
+    socket.on('client-get-message', (message: MessageModel) => {
       setArrivalMessage(message);
+      setMessageStore(message);
     })
 
     return () => {}
-  }, []);
+  }, [socket, setMessageStore]);
 
   // update arrival message to messsages
   useEffect(() => {
-    if(!isEmpty(arrivalMessage) && owner._id !== arrivalMessage.sender._id) {
-      setMessages((prev: any) => [...prev, arrivalMessage]);
+    if(!isEmpty(arrivalMessage) && currentUser._id !== arrivalMessage.sender._id) {
+      
+      const messagesTemp = [...messages];
+      const msg = arrivalMessage.messages[0];
+      const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
+      const isExistConversation = !isEmpty(messagesTemp) 
+                                  && lastMessage.createdAtRound === arrivalMessage.createdAtRound 
+                                  && lastMessage.sender?._id === arrivalMessage.sender._id;
+      
+      if (isExistConversation) { // push message into conversation with [0, 1 minute];
+        lastMessage.messages?.push(msg);
+      } else {
+        messagesTemp.push(arrivalMessage);
+      }
+
+      setMessages(messagesTemp);
     }
 
     return () => {}
-  }, [arrivalMessage]);
+  }, [arrivalMessage, currentUser._id]);
 
   useEffect(() => {
     const token = window.sessionStorage.getItem('token');
@@ -57,16 +71,17 @@ function ChatContent({ location, socket }: any) {
         // emit join-room flat
         socket.emit('join-room', { conversationId: conversation._id, userId: decoded._id });
 
-        setOwner(decoded);
+        setCurrentUser(decoded);
 
         const messagesUrl = `${API_LINK}/messages/${conversation._id}`;
         const messageResult = await axios.get(messagesUrl);
 
         const { data } = messageResult || {};
-        const { messages } = data || {};
+        const { messages } = data || {} as MessageModel[];
 
-        if (messages) {
+        if (!isEmpty(messages)) {
           const groupMessageByTime = groupMessage(messages); // time = 1 minute
+          setMessageStore(groupMessageByTime[groupMessageByTime.length - 1]);
           setMessages(groupMessageByTime);
         }
       }
@@ -74,6 +89,12 @@ function ChatContent({ location, socket }: any) {
 
     return () => {}
   }, [conversation._id]);
+  
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+
+    return () => {}
+  }, [messages]);
 
   async function handleChange(value: any) {
     setText(value);
@@ -133,27 +154,26 @@ function ChatContent({ location, socket }: any) {
             createdAtRound: createdAtMinutes,
             messages: [text],
             sender: {
-              user_avatar: owner.user_avatar,
-              user_name: owner.user_name,
-              _id: owner._id,
+              user_avatar: currentUser.user_avatar,
+              user_name: currentUser.user_name,
+              _id: currentUser._id,
             }
-          }
+          } as MessageModel
 
-          const messagesTemp = messages;
+          const messagesTemp = [...messages];
+          const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
+          const isExistConversation = !isEmpty(messagesTemp) 
+                                      && lastMessage.createdAtRound === createdAtMinutes 
+                                      && lastMessage.sender?._id === currentUser._id;
  
-          if (
-            !isEmpty(messagesTemp) 
-            && messagesTemp[messages.length - 1].createdAtRound === createdAtMinutes
-            && messagesTemp[messages.length - 1].sender._id === owner._id
-          ) { // push message into conversation with [0, 1 minute];
-            messagesTemp[messages.length - 1].messages.push(text);
-            setText('');
-            setMessages(messagesTemp);
+          if (isExistConversation) { // push message into conversation with [0, 1 minute];
+            lastMessage.messages?.push(text);
           } else {
             messagesTemp.push(message);
-            setText('');
-            setMessages(messagesTemp);
           }
+
+          setText('');
+          setMessages(messagesTemp);
 
           socket.emit('client-send-message', message);
         }
@@ -162,59 +182,14 @@ function ChatContent({ location, socket }: any) {
     )
   }
 
-  function getNameConversation(conversation: any) {
-    const { members } = conversation;
-    switch (members.length) {
-      case 1:
-        return members[0].user_name;
-      case 2:
-        return members[1].user_name;
-      default:
-        return ''
-    }
-  }
-
-  function groupMessage(messages: any[]) {
-    const groupMessageByTime = [] as any; // time = 1 minute
-
-    messages.forEach((message: any) => {
-
-      // reset seconds and milliseconds to 0 and then getTime
-      const time = new Date(message.createdAt);
-      time.setSeconds(0);
-      time.setMilliseconds(0);
-      const createdAtMinutes = time.getTime();
-
-      // Try to get existing message group
-      const currentGroup = groupMessageByTime.filter(
-        (msgGrp: any) => msgGrp.createdAtRound === createdAtMinutes && message.sender._id === msgGrp.sender._id
-      );
-
-      // If we've got the existing group, add the message, otherwise create a new group
-      if (currentGroup.length) {
-        // currentGroup[0].texts.push(message);
-        currentGroup[0].messages.push(message.text);
-      } else {
-        groupMessageByTime.push({
-          conversationId: message.conversationId,
-          sender: message.sender,
-          // texts: [message], 
-          messages: [message.text],
-          createdAtRound: createdAtMinutes,
-          createdAt: message.createdAt
-        });
-      }
-    });
-
-    return groupMessageByTime || [];
-  }
-
   return (
     <div className="chat-content">
       <div className="chat-content-header">
         <div className="person-card">
-          <span className="card-avatar"></span>
-          <span className="cartd-title">{conversation && getNameConversation(conversation)}</span>
+          <span className="card-avatar" style={{backgroundColor: getAvatarColor(conversation.members, currentUser)}}>
+            { getAvatarText(conversation.members, currentUser) }
+          </span>
+          <span className="cartd-title">{conversation && getNameChanel(conversation, currentUser)}</span>
         </div>
         <div className="header-tabs-bar-wrapper">
           <ul className="tabs-bar-list">
@@ -228,42 +203,12 @@ function ChatContent({ location, socket }: any) {
         <div className="message-content-container">
           <div className="message-content">
             {
-              !isEmpty(messages) && !isEmpty(owner)
-              && messages.map((message: any) => {
-                if (message.sender._id === owner._id) {
-                  return (
-                    <div key={message.createdAt} className="owner-message">
-                      <div className="message-body">
-                        <div className="message-body-title">
-                          <span className="message-timestamp">{timeAgo.format(new Date(message.createdAtRound))}</span>
-                          <div className="message-emoji"></div>
-                          <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
-                        </div>
-                        <div className="message-body-content"
-                          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                } else {
-                  return (
-                    <div key={message.createdAt} className="customer-message">
-                      <div className="message-avatar"></div>
-                      <div className="message-body">
-                        <div className="message-body-title">
-                          <span className="message-name">{message.sender.user_name}</span>
-                          <span className="message-timestamp">{timeAgo.format(new Date(message.createdAt))}</span>
-                          <div className="message-emoji"></div>
-                          <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
-                        </div>
-                        <div className="message-body-content"
-                          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                }
-              })
+              !isEmpty(messages) && !isEmpty(currentUser)
+              && messages.map((message: any) => (
+                <div ref={scrollRef as any} key={message.createdAt}>
+                  <Message  message={message} currentUser={currentUser} />
+                </div>
+              ))
             }
 
           </div>
@@ -296,4 +241,10 @@ const mapStateToProps = ({ conversationStore, socketStore }: any) => {
   }
 }
 
-export default connect(mapStateToProps, null)(ChatContent);
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    setMessageStore: (message: MessageModel) => dispatch(setMessage(message))
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatContent);
