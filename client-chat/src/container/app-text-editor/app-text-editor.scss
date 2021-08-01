@@ -1,0 +1,120 @@
+.editor-container {
+  padding: 12px 15px;
+  background-color: #fff;
+  .editor-header {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    .item-group {
+      display: flex;
+      margin-bottom: 10px;
+      padding: 0 15px;
+      border-left: 2px solid #aaaaaa;
+      &:first-child {
+        border-left: unset;
+        padding-left: unset;
+      }
+      .text-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 25px;
+        height: 25px;
+        line-height: 1;
+        background-color: #eeeeee;
+        margin: 0 5px;
+        cursor: pointer;
+        font-weight: bold;
+        border: unset;
+      }
+      .text-bold {
+        font-weight: bold;
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-italic {
+        font-style: italic;
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-underline {
+        text-decoration: underline;
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-strike-through {
+        text-decoration: line-through;
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-super {
+        &.active{
+          background-color: #bbbbbb
+        }
+        .text-content {
+          position: relative;
+          .super{
+            position: absolute;
+            font-size: .7rem;
+          }
+        }
+      }
+      .text-sub {
+        &.active{
+          background-color: #bbbbbb
+        }
+        .text-content {
+          position: relative;
+          .sub {
+            position: absolute;
+            font-size: .7rem;
+            bottom: -3px;
+          }
+        }
+      }
+      .text-justifyLeft {
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-justifyCenter {
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-justifyRight {
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-insertOrderedList {
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+      .text-insertUnorderedList {
+        &.active{
+          background-color: #bbbbbb
+        }
+      }
+    }
+  }
+  .editor-input {
+    cursor: text;
+    word-break: break-all;
+    overflow: hidden;
+  }
+  .editor-input:empty:before {
+    content: attr(data-placeholder);
+    color: #a5a5a5;
+  }
+  .editor-input:focus{
+    outline: unset;
+    box-shadow: unset;
+    border: unset;
+  }
+}

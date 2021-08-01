@@ -84,10 +84,14 @@
         overflow: hidden;
       }
     }
-    .message-new {
+    .message-editor {
       max-width: 90.8rem;
       margin: auto;
       width: 100%;
+      .editor-wrap {
+        padding: .6rem 0 .3rem;
+        margin: 0 6rem;
+      }
       .quill {
         background-color: #fff;
         padding: .6rem 0 .3rem;

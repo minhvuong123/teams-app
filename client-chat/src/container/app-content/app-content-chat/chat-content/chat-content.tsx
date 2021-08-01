@@ -14,6 +14,7 @@ import { MessageModel } from 'shared/model';
 import { setMessage } from 'shared/redux/actions';
 import Message from './message/message';
 import { getAvatarColor, getAvatarText, getNameChanel, groupMessage } from 'shared/calculator';
+import AppTextEditor from 'container/app-text-editor/app-text-editor';
 
 
 function ChatContent({ location, socket, setMessageStore }: any) {
@@ -22,6 +23,7 @@ function ChatContent({ location, socket, setMessageStore }: any) {
   const [arrivalMessage, setArrivalMessage] = useState({} as any);
   const [currentUser, setCurrentUser] = useState({} as any);
   const [modules, setModules] = useState({ toolbar: false });
+  const [isCloseEditor, setIsCloseEditor] = useState<boolean>(true);
   const { conversation } = location.state;
 
   const reactQuillRef = useRef();
@@ -140,8 +142,13 @@ function ChatContent({ location, socket, setMessageStore }: any) {
 
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
+        const isImage = text.includes('data:image');
+        const startIndex = text.indexOf('data:image');
+        const endIndex = text.indexOf('">');
+        const base64Text = isImage ? text.substring(startIndex, endIndex) : text;
+
         const messageUrl = `${API_LINK}/messages`;
-        const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: text } });
+        const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: base64Text } });
 
         const { data } = messageResult || {};
         const { status } = data || {};
@@ -186,6 +193,18 @@ function ChatContent({ location, socket, setMessageStore }: any) {
     )
   }
 
+  function onChangeEditor(value: any): void {
+    setText(value);
+  }
+
+  function onClose(value?: boolean): void {
+    setIsCloseEditor(value as any);
+  }
+
+  function onCloseEditor(): void {
+    setIsCloseEditor(!isCloseEditor);
+  }
+
   return (
     <div className="chat-content">
       <div className="chat-content-header">
@@ -215,8 +234,22 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             <div ref={scrollRef as any}></div>
           </div>
         </div>
-        <div className="message-new">
-          <ReactQuill
+        <div className="message-editor">
+          <AppTextEditor
+            wrapName="editor-wrap" 
+            textClass="editor-text" 
+            placeholder="message ..."
+            isClose={isCloseEditor}
+            onClose={onClose}
+            onChange={onChangeEditor} 
+          />
+          <div className="extension-icon">
+            <div>
+              <span className="sub-icons" onClick={onCloseEditor}><AiOutlineTool /></span>
+            </div>
+            <span onClick={sendMessage} className="sub-icons"><AiOutlineSend /></span>
+          </div>
+          {/* <ReactQuill
             ref={reactQuillRef as any}
             theme="snow"
             modules={modules}
@@ -227,9 +260,8 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             <div>
               <span className="sub-icons" onClick={isEditor}><AiOutlineTool /></span>
             </div>
-
             <span onClick={sendMessage} className="sub-icons"><AiOutlineSend /></span>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

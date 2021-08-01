@@ -62,6 +62,7 @@
   "devDependencies": {
     "@types/javascript-time-ago": "^2.0.3",
     "@types/jsonwebtoken": "^8.5.4",
+    "file-loader": "^6.2.0",
     "sass-loader": "^12.1.0"
   }
 }

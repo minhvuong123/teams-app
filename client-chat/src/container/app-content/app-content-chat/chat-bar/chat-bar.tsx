@@ -63,14 +63,17 @@ function ChatBar({ messageStore }: any) {
   function getRenderLastMessage(message: MessageModel) {
     const messages = message.messages || [];
     if (!isEmpty(message)) {
+      const text = messages[messages.length - 1];
+      const isImage = text.includes('data:image');
+
       return (
-        lastMessage.sender?._id === currentUser._id
+        message.sender?._id === currentUser._id
         ? <div className="item-wrap">
           <span className="text-owner">You:</span> 
-          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${messages[messages.length - 1]}` }} />
+          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${isImage ? 'Images...' : text}` }} />
         </div>
         : <div className="item-wrap">
-          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${messages[messages.length - 1]}` }} />
+          <div className="item-review" dangerouslySetInnerHTML={{ __html: `${isImage ? 'Images...' : text}` }} />
         </div>
       )
     }
