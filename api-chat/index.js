@@ -24,10 +24,12 @@ app.use('/static', express.static('public'));
 const users = require('./routes/user/user.route');
 const conversation = require('./routes/conversation/conversation.route');
 const messages = require('./routes/message/message.route');
+const files = require('./routes/file/file.route');
 
 app.use('/users', users);
 app.use('/conversation', conversation);
 app.use('/messages', messages);
+app.use('/files', files);
 
 // mongoose connect
 mongoose.connect('mongodb://localhost/teams-app', { useNewUrlParser: true, useUnifiedTopology: true });

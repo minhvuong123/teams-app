@@ -107,6 +107,14 @@
     cursor: text;
     word-break: break-all;
     overflow: hidden;
+    img {
+      display: block;
+      max-width: 110px;
+      padding: 5px;
+      background: #fff;
+      border: 1px solid #ddd;
+      margin-bottom: 5px;
+    }
   }
   .editor-input:empty:before {
     content: attr(data-placeholder);

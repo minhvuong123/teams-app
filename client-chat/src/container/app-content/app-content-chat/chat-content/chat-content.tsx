@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import 'react-quill/dist/quill.snow.css';
 import './chat-content.scss';
 import { API_LINK } from 'shared/const';
-import { isEmpty } from 'lodash';
+import { isEmpty, isEqual } from 'lodash';
 
 import { MessageModel } from 'shared/model';
 import { setMessage } from 'shared/redux/actions';
@@ -24,6 +24,8 @@ function ChatContent({ location, socket, setMessageStore }: any) {
   const [currentUser, setCurrentUser] = useState({} as any);
   const [modules, setModules] = useState({ toolbar: false });
   const [isCloseEditor, setIsCloseEditor] = useState<boolean>(true);
+  const [files, setFiles] = useState<[]>([]);
+
   const { conversation } = location.state;
 
   const reactQuillRef = useRef();
@@ -36,20 +38,20 @@ function ChatContent({ location, socket, setMessageStore }: any) {
       setMessageStore(message);
     })
 
-    return () => {}
+    return () => { }
   }, [socket, setMessageStore]);
 
   // update arrival message to messsages
   useEffect(() => {
-    if(!isEmpty(arrivalMessage) && currentUser._id !== arrivalMessage.sender._id) {
-      
+    if (!isEmpty(arrivalMessage) && currentUser._id !== arrivalMessage.sender._id) {
+
       const messagesTemp = [...messages];
       const msg = arrivalMessage.messages[0];
       const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
-      const isExistConversation = !isEmpty(messagesTemp) 
-                                  && lastMessage.createdAtRound === arrivalMessage.createdAtRound 
-                                  && lastMessage.sender?._id === arrivalMessage.sender._id;
-      
+      const isExistConversation = !isEmpty(messagesTemp)
+        && lastMessage.createdAtRound === arrivalMessage.createdAtRound
+        && lastMessage.sender?._id === arrivalMessage.sender._id;
+
       if (isExistConversation) { // push message into conversation with [0, 1 minute];
         lastMessage.messages?.push(msg);
       } else {
@@ -59,7 +61,7 @@ function ChatContent({ location, socket, setMessageStore }: any) {
       setMessages(messagesTemp);
     }
 
-    return () => {}
+    return () => { }
   }, [arrivalMessage, currentUser._id]);
 
   useEffect(() => {
@@ -89,9 +91,9 @@ function ChatContent({ location, socket, setMessageStore }: any) {
       }
     });
 
-    return () => {}
+    return () => { }
   }, [conversation._id]);
-  
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({
       block: 'end',
@@ -99,7 +101,7 @@ function ChatContent({ location, socket, setMessageStore }: any) {
       inline: 'center'
     });
 
-    return () => {}
+    return () => { }
   }, [messages]);
 
   async function handleChange(value: any) {
@@ -136,65 +138,88 @@ function ChatContent({ location, socket, setMessageStore }: any) {
   const icons = Quill.import('ui/icons');
   icons["close"] = 'close';
 
-
   function sendMessage() {
     const token = window.sessionStorage.getItem('token');
 
+    const parser = new DOMParser();
+    const html = parser.parseFromString(text, 'text/html');
+    console.log("html: ", html.body);
+    const images = html.getElementsByTagName('img');
+    console.log("images: ", images);
+    console.log("html: ", html.body);
+    console.log("files: ", files);
+
+    console.log("html: ", html.body.innerHTML);
+
+    const populateFiles = files.map((file: any, index) => {
+      return {
+        name: file.name,
+        base64: images[index].src,
+        type: file.type
+      }
+    })
+    
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
-        const isImage = text.includes('data:image');
-        const startIndex = text.indexOf('data:image');
-        const endIndex = text.indexOf('">');
-        const base64Text = isImage ? text.substring(startIndex, endIndex) : text;
+        // const isImage = text.includes('data:image');
+        // const startIndex = text.indexOf('data:image');
+        // const endIndex = text.indexOf('">');
+        // const base64Text = isImage ? text.substring(startIndex, endIndex) : text;
 
-        const messageUrl = `${API_LINK}/messages`;
-        const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: base64Text } });
+        const fileUrl = `${API_LINK}/files`
+        const filesStore = await axios.post(fileUrl, { files: { conversationId: conversation._id, files: populateFiles } });
 
-        const { data } = messageResult || {};
-        const { status } = data || {};
+        // const messageUrl = `${API_LINK}/messages`;
+        // const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: text } });
 
-        if (status === 'success') {
-          const time = new Date();
-          time.setSeconds(0);
-          time.setMilliseconds(0);
-          const createdAtMinutes = time.getTime();
+        // const { data } = messageResult || {};
+        // const { status } = data || {};
 
-          const message = {
-            conversationId: conversation._id,
-            createdAt: new Date().getTime(),
-            createdAtRound: createdAtMinutes,
-            messages: [text],
-            sender: {
-              user_avatar: currentUser.user_avatar,
-              user_name: currentUser.user_name,
-              _id: currentUser._id,
-            }
-          } as MessageModel
+        // if (status === 'success') {
+        //   const time = new Date();
+        //   time.setSeconds(0);
+        //   time.setMilliseconds(0);
+        //   const createdAtMinutes = time.getTime();
 
-          const messagesTemp = [...messages];
-          const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
-          const isExistConversation = !isEmpty(messagesTemp) 
-                                      && lastMessage.createdAtRound === createdAtMinutes 
-                                      && lastMessage.sender?._id === currentUser._id;
- 
-          if (isExistConversation) { // push message into conversation with [0, 1 minute];
-            lastMessage.messages?.push(text);
-          } else {
-            messagesTemp.push(message);
-          }
+        //   const message = {
+        //     conversationId: conversation._id,
+        //     createdAt: new Date().getTime(),
+        //     createdAtRound: createdAtMinutes,
+        //     messages: [text],
+        //     sender: {
+        //       user_avatar: currentUser.user_avatar,
+        //       user_name: currentUser.user_name,
+        //       _id: currentUser._id,
+        //     }
+        //   } as MessageModel
 
-          setText('');
-          setMessages(messagesTemp);
+        //   const messagesTemp = [...messages];
+        //   const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
+        //   const isExistConversation = !isEmpty(messagesTemp)
+        //     && lastMessage.createdAtRound === createdAtMinutes
+        //     && lastMessage.sender?._id === currentUser._id;
 
-          socket.emit('client-send-message', message);
-        }
-      }
-    }
+        //   if (isExistConversation) { // push message into conversation with [0, 1 minute];
+        //     lastMessage.messages?.push(text);
+        //   } else {
+        //     messagesTemp.push(message);
+        //   }
+
+        //   setText('');
+        //   setMessages(messagesTemp);
+
+        //   socket.emit('client-send-message', message);
+        // }
+      }}
     )
   }
 
-  function onChangeEditor(value: any): void {
+  function onChangeEditor(value: string, filesUpload?: any): void {
     setText(value);
+    if(!isEmpty(filesUpload)) {
+      const filesTemp = [...files, ...filesUpload] as any;
+      setFiles(filesTemp);
+    }
   }
 
   function onClose(value?: boolean): void {
@@ -209,8 +234,8 @@ function ChatContent({ location, socket, setMessageStore }: any) {
     <div className="chat-content">
       <div className="chat-content-header">
         <div className="person-card">
-          <span className="card-avatar" style={{backgroundColor: getAvatarColor(conversation.members, currentUser)}}>
-            { getAvatarText(conversation.members, currentUser) }
+          <span className="card-avatar" style={{ backgroundColor: getAvatarColor(conversation.members, currentUser) }}>
+            {getAvatarText(conversation.members, currentUser)}
           </span>
           <span className="cartd-title">{conversation && getNameChanel(conversation, currentUser)}</span>
         </div>
@@ -228,7 +253,7 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             {
               !isEmpty(messages) && !isEmpty(currentUser)
               && messages.map((message: any) => (
-                  <Message key={message.createdAt} message={message} currentUser={currentUser} />
+                <Message key={message.createdAt} message={message} currentUser={currentUser} />
               ))
             }
             <div ref={scrollRef as any}></div>
@@ -236,12 +261,12 @@ function ChatContent({ location, socket, setMessageStore }: any) {
         </div>
         <div className="message-editor">
           <AppTextEditor
-            wrapName="editor-wrap" 
-            textClass="editor-text" 
+            wrapName="editor-wrap"
+            textClass="editor-text"
             placeholder="message ..."
             isClose={isCloseEditor}
             onClose={onClose}
-            onChange={onChangeEditor} 
+            onChange={onChangeEditor}
           />
           <div className="extension-icon">
             <div>

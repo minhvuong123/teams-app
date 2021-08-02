@@ -24,8 +24,8 @@ import {
 import './app-text-editor.scss';
 
 function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, onClose }: any) {
-  const [content, setContent] = useState<string>('');
   const [previousNode, setPreviousNode] = useState<string>('');
+  const [files, setFiles] = useState<any>([]);
 
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
@@ -38,6 +38,7 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
   const [isInsertUnOrderedList, setIsInsertUnOrderedList] = useState<boolean>(false);
 
   const editorRef = useRef() as any;
+  const editorFileRef = useRef() as any;
 
   function onTextEditor(tag: string, option?: string) {
     editorRef.current.focus();
@@ -76,8 +77,34 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
     }
   }
 
-  function onUploadImage(): void {
-    onChange("upload upload upload upload upload");
+  function onUploadImageClick(): void {
+    if (editorFileRef?.current) {
+      editorFileRef?.current.click();
+    }
+  }
+
+  async function onUploadImageChange(event: any): Promise<void> {
+    editorRef.current.focus();
+    const files = event.target.files;
+    setFiles((prevFiles: any[]) => [...prevFiles, ...files]);
+
+    for await (const file of files) {
+      const base64Url = await getBase64(file) as any;
+      document.execCommand('insertImage', false, base64Url);
+    }
+
+    // reset value to continue upload to the same image
+    event.target.value = '';
+    setFiles([]);
+  }
+
+  function getBase64(file: any) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   }
 
   function onCloseEditor(): void {
@@ -86,11 +113,12 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
 
   function onChangeEditor(event: any): void {
     const value = event.target.innerHTML;
+
     if(!value) { 
       setIsInsertOrderedList(false);
       setIsInsertUnOrderedList(false);
     }
-    onChange(value);
+    onChange(value, files);
   }
 
   function onKeyDownEditor(event: any): void {
@@ -190,7 +218,7 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
             <div className="item-group">
               <button 
                 className="text-item text-insertImage" 
-                onClick={() => onUploadImage()} title="Upload"
+                onClick={() => onUploadImageClick()} title="Upload"
               >
                 <p className="text-content"><IoCloudUploadOutline /></p>
               </button>
@@ -230,7 +258,14 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
             </div>
           </div>
         }
-
+        <input 
+          className="editor-file" 
+          style={{display: 'none'}} 
+          onChange={onUploadImageChange}
+          type="file" 
+          multiple
+          ref={editorFileRef}
+        />
         <div
           className={['editor-input', textClass].join(' ')}
           ref={editorRef}
