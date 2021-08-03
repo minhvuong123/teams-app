@@ -29,6 +29,7 @@ router.post('/', async function (req, res, next) {
           reject({ key, status: 'fault' });
         });
       });
+      
       uploadsRedult.push(await result);
     }
 

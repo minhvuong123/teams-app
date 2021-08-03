@@ -25,7 +25,6 @@ import './app-text-editor.scss';
 
 function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, onClose }: any) {
   const [previousNode, setPreviousNode] = useState<string>('');
-  const [files, setFiles] = useState<any>([]);
 
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
@@ -86,16 +85,19 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
   async function onUploadImageChange(event: any): Promise<void> {
     editorRef.current.focus();
     const files = event.target.files;
-    setFiles((prevFiles: any[]) => [...prevFiles, ...files]);
 
     for await (const file of files) {
       const base64Url = await getBase64(file) as any;
-      document.execCommand('insertImage', false, base64Url);
+      const wrappedselection = `<img data-id="1234" data-name="${file.name}" data-type="${file.type}" src="${base64Url}" >`;
+      document.execCommand('insertHTML', false, wrappedselection);
+      // document.execCommand('insertImage', false, base64Url);
+
+    //   const prefix = `img data-id="1234" data-name="${file.name}" data-type="${file.type}"`;
+    //   image.outerHTML = htmlTemplate[0] + prefix + htmlTemplate[1];
     }
 
     // reset value to continue upload to the same image
     event.target.value = '';
-    setFiles([]);
   }
 
   function getBase64(file: any) {
@@ -118,18 +120,32 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
       setIsInsertOrderedList(false);
       setIsInsertUnOrderedList(false);
     }
-    onChange(value, files);
+
+    onChange(value);
   }
 
   function onKeyDownEditor(event: any): void {
     const selection = document.getSelection() as any;
-    if (selection?.baseNode?.parentNode && event.key === 'Backspace') {
-      if (previousNode !== selection?.baseNode?.parentNode?.localName) {
-        // reset command is actived
-        // ... code here follow to previousNode
-        setPreviousNode(selection?.baseNode?.parentNode?.localName); // store to previousNode
-      }
-    }
+    // if (selection?.baseNode?.children.lastChild.localName === "img" && event.key === 'Backspace') {
+    //   const filesTemp = [...files];
+    //   filesTemp.pop();
+    // } else if (selection?.baseNode?.parentNode && event.key === 'Backspace') {
+    //   if (previousNode !== selection?.baseNode?.parentNode?.localName) {
+    //     // reset command is actived
+    //     // ... code here follow to previousNode
+    //     setPreviousNode(selection?.baseNode?.parentNode?.localName); // store to previousNode
+    //   }
+    // }
+
+    // get current selection
+    // var sel = window.getSelection() as any;
+    // if (sel.rangeCount > 0) {
+    //     var range = sel.getRangeAt(0);
+    //     var node = range.startContainer;
+    //     if (node.hasChildNodes() && range.startOffset > 0) {
+    //         node = node.childNodes[range.startOffset - 1];
+    //     }
+    // }
   }
 
   return (

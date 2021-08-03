@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import ReactQuill, { Quill } from 'react-quill';
 import { AiOutlineSend, AiOutlineTool } from "react-icons/ai";
 import { connect } from 'react-redux';
 import axios from 'axios';
@@ -8,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import 'react-quill/dist/quill.snow.css';
 import './chat-content.scss';
 import { API_LINK } from 'shared/const';
-import { isEmpty, isEqual } from 'lodash';
+import { isEmpty } from 'lodash';
 
 import { MessageModel } from 'shared/model';
 import { setMessage } from 'shared/redux/actions';
@@ -22,13 +21,10 @@ function ChatContent({ location, socket, setMessageStore }: any) {
   const [messages, setMessages] = useState<MessageModel[]>([]);
   const [arrivalMessage, setArrivalMessage] = useState({} as any);
   const [currentUser, setCurrentUser] = useState({} as any);
-  const [modules, setModules] = useState({ toolbar: false });
   const [isCloseEditor, setIsCloseEditor] = useState<boolean>(true);
-  const [files, setFiles] = useState<[]>([]);
 
   const { conversation } = location.state;
 
-  const reactQuillRef = useRef();
   const scrollRef = useRef<HTMLDivElement>();
 
   // listen to arrival message
@@ -104,39 +100,6 @@ function ChatContent({ location, socket, setMessageStore }: any) {
     return () => { }
   }, [messages]);
 
-  async function handleChange(value: any) {
-    setText(value);
-  }
-
-  function isEditor(value: any) {
-    const toolbar = {
-      toolbar: {
-        container: [
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'color': [] }, { 'background': [] }],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-          [{ 'indent': '-1' }, { 'indent': '+1' }],
-          ['image'],
-          ['close']
-        ],
-        handlers: {
-          close: () => closeFunction()
-        }
-      } as any
-    }
-
-    setModules(toolbar);
-  }
-
-  function closeFunction() {
-    const toolbar = {
-      toolbar: false
-    }
-    setModules(toolbar);
-  }
-
-  const icons = Quill.import('ui/icons');
-  icons["close"] = 'close';
 
   function sendMessage() {
     const token = window.sessionStorage.getItem('token');
@@ -147,17 +110,10 @@ function ChatContent({ location, socket, setMessageStore }: any) {
     const images = html.getElementsByTagName('img');
     console.log("images: ", images);
     console.log("html: ", html.body);
-    console.log("files: ", files);
 
     console.log("html: ", html.body.innerHTML);
 
-    const populateFiles = files.map((file: any, index) => {
-      return {
-        name: file.name,
-        base64: images[index].src,
-        type: file.type
-      }
-    })
+    const populateFiles = [] as any;
     
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
@@ -166,8 +122,10 @@ function ChatContent({ location, socket, setMessageStore }: any) {
         // const endIndex = text.indexOf('">');
         // const base64Text = isImage ? text.substring(startIndex, endIndex) : text;
 
-        const fileUrl = `${API_LINK}/files`
-        const filesStore = await axios.post(fileUrl, { files: { conversationId: conversation._id, files: populateFiles } });
+        if (!isEmpty(populateFiles)) {
+          const fileUrl = `${API_LINK}/files`
+          const filesStore = await axios.post(fileUrl, { files: { conversationId: conversation._id, files: populateFiles } });
+        }
 
         // const messageUrl = `${API_LINK}/messages`;
         // const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: text } });
@@ -214,12 +172,8 @@ function ChatContent({ location, socket, setMessageStore }: any) {
     )
   }
 
-  function onChangeEditor(value: string, filesUpload?: any): void {
+  function onChangeEditor(value: string): void {
     setText(value);
-    if(!isEmpty(filesUpload)) {
-      const filesTemp = [...files, ...filesUpload] as any;
-      setFiles(filesTemp);
-    }
   }
 
   function onClose(value?: boolean): void {
