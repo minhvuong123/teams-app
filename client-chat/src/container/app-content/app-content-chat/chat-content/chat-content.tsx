@@ -106,68 +106,81 @@ function ChatContent({ location, socket, setMessageStore }: any) {
 
     const parser = new DOMParser();
     const html = parser.parseFromString(text, 'text/html');
-    console.log("html: ", html.body);
+    // console.log("html: ", html.body);
     const images = html.getElementsByTagName('img');
-    console.log("images: ", images);
-    console.log("html: ", html.body);
+    // console.log("images: ", images);
+    // console.log("html: ", html.body);
 
-    console.log("html: ", html.body.innerHTML);
+    // console.log("html: ", html.body.innerHTML);
 
-    const populateFiles = [] as any;
+    const populateFiles = Array.from(images).map((image: any) => {
+      return {
+        id: image.dataset.id || '',
+        name: image.dataset.name || '',
+        base64: image.getAttribute('src') || '',
+        type: image.dataset.type || '',
+      }
+    });
     
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
-        // const isImage = text.includes('data:image');
-        // const startIndex = text.indexOf('data:image');
-        // const endIndex = text.indexOf('">');
-        // const base64Text = isImage ? text.substring(startIndex, endIndex) : text;
 
         if (!isEmpty(populateFiles)) {
           const fileUrl = `${API_LINK}/files`
           const filesStore = await axios.post(fileUrl, { files: { conversationId: conversation._id, files: populateFiles } });
+          const { data } = filesStore || {};
+          const { files } = data || {};
+
+          if ( files.length > 0) {
+            files.forEach((file: any, index: number) => {
+              if (!file.status) {
+                images[index].src = '';
+              }
+            });
+          }
         }
 
-        // const messageUrl = `${API_LINK}/messages`;
-        // const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: text } });
+        const messageUrl = `${API_LINK}/messages`;
+        const messageResult = await axios.post(messageUrl, { message: { conversationId: conversation._id, senderId: decoded._id, text: html.body.innerHTML } });
 
-        // const { data } = messageResult || {};
-        // const { status } = data || {};
+        const { data } = messageResult || {};
+        const { status } = data || {};
 
-        // if (status === 'success') {
-        //   const time = new Date();
-        //   time.setSeconds(0);
-        //   time.setMilliseconds(0);
-        //   const createdAtMinutes = time.getTime();
+        if (status === 'success') {
+          const time = new Date();
+          time.setSeconds(0);
+          time.setMilliseconds(0);
+          const createdAtMinutes = time.getTime();
 
-        //   const message = {
-        //     conversationId: conversation._id,
-        //     createdAt: new Date().getTime(),
-        //     createdAtRound: createdAtMinutes,
-        //     messages: [text],
-        //     sender: {
-        //       user_avatar: currentUser.user_avatar,
-        //       user_name: currentUser.user_name,
-        //       _id: currentUser._id,
-        //     }
-        //   } as MessageModel
+          const message = {
+            conversationId: conversation._id,
+            createdAt: new Date().getTime(),
+            createdAtRound: createdAtMinutes,
+            messages: [text],
+            sender: {
+              user_avatar: currentUser.user_avatar,
+              user_name: currentUser.user_name,
+              _id: currentUser._id,
+            }
+          } as MessageModel
 
-        //   const messagesTemp = [...messages];
-        //   const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
-        //   const isExistConversation = !isEmpty(messagesTemp)
-        //     && lastMessage.createdAtRound === createdAtMinutes
-        //     && lastMessage.sender?._id === currentUser._id;
+          const messagesTemp = [...messages];
+          const lastMessage = messagesTemp ? messagesTemp[messages.length - 1] : {} as MessageModel;
+          const isExistConversation = !isEmpty(messagesTemp)
+            && lastMessage.createdAtRound === createdAtMinutes
+            && lastMessage.sender?._id === currentUser._id;
 
-        //   if (isExistConversation) { // push message into conversation with [0, 1 minute];
-        //     lastMessage.messages?.push(text);
-        //   } else {
-        //     messagesTemp.push(message);
-        //   }
+          if (isExistConversation) { // push message into conversation with [0, 1 minute];
+            lastMessage.messages?.push(text);
+          } else {
+            messagesTemp.push(message);
+          }
 
-        //   setText('');
-        //   setMessages(messagesTemp);
+          setText('');
+          setMessages(messagesTemp);
 
-        //   socket.emit('client-send-message', message);
-        // }
+          socket.emit('client-send-message', message);
+        }
       }}
     )
   }
@@ -221,6 +234,7 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             isClose={isCloseEditor}
             onClose={onClose}
             onChange={onChangeEditor}
+            value={text}
           />
           <div className="extension-icon">
             <div>
@@ -228,19 +242,6 @@ function ChatContent({ location, socket, setMessageStore }: any) {
             </div>
             <span onClick={sendMessage} className="sub-icons"><AiOutlineSend /></span>
           </div>
-          {/* <ReactQuill
-            ref={reactQuillRef as any}
-            theme="snow"
-            modules={modules}
-            value={text}
-            onChange={handleChange}
-          />
-          <div className="extension-icon">
-            <div>
-              <span className="sub-icons" onClick={isEditor}><AiOutlineTool /></span>
-            </div>
-            <span onClick={sendMessage} className="sub-icons"><AiOutlineSend /></span>
-          </div> */}
         </div>
       </div>
     </div>

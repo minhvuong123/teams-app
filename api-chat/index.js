@@ -54,8 +54,8 @@ io.on("connection", (socket) => {
 
     // add User
     addUser(userId, socket.id);
-    console.log("room: ", socket.adapter.rooms);
-    console.log("usersSocket: ", usersSocket);
+    // console.log("room: ", socket.adapter.rooms);
+    // console.log("usersSocket: ", usersSocket);
   });
 
   // leave conversation
@@ -64,15 +64,15 @@ io.on("connection", (socket) => {
 
     // remove user
     removeUser(socket.id);
-    console.log("rooms: ", socket.adapter.rooms);
-    console.log("usersSocket: ", usersSocket);
+    // console.log("rooms: ", socket.adapter.rooms);
+    // console.log("usersSocket: ", usersSocket);
   })
 
 
   // send and get message
   socket.on('client-send-message', (message) => {
-    console.log('message: ', message);
-    console.log("currenRoom: ", socket.currenRoom);
+    // console.log('message: ', message);
+    // console.log("currenRoom: ", socket.currenRoom);
     io.sockets.in(socket.currenRoom).emit('client-get-message', message)
   });
 

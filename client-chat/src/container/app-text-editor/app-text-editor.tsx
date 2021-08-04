@@ -1,6 +1,7 @@
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useState } from 'react';
+import { v4 as uuid } from 'uuid';
 
 import { IoIosList } from "react-icons/io";
 import {
@@ -23,7 +24,7 @@ import {
 
 import './app-text-editor.scss';
 
-function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, onClose }: any) {
+function AppTextEditor({ value, wrapName, textClass, placeholder, isClose, onChange, onClose }: any) {
   const [previousNode, setPreviousNode] = useState<string>('');
 
   const [isBold, setIsBold] = useState<boolean>(false);
@@ -38,6 +39,14 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
 
   const editorRef = useRef() as any;
   const editorFileRef = useRef() as any;
+
+  useEffect(() => {
+    if (!value) {
+      editorRef.current.innerHTML = value;
+    }
+    
+    return () => {}
+  }, [value])
 
   function onTextEditor(tag: string, option?: string) {
     editorRef.current.focus();
@@ -88,7 +97,7 @@ function AppTextEditor({ wrapName, textClass, placeholder, isClose, onChange, on
 
     for await (const file of files) {
       const base64Url = await getBase64(file) as any;
-      const wrappedselection = `<img data-id="1234" data-name="${file.name}" data-type="${file.type}" src="${base64Url}" >`;
+      const wrappedselection = `<img data-id="${uuid()}" data-name="${file.name}" data-type="${file.type}" src="${base64Url}" >`;
       document.execCommand('insertHTML', false, wrappedselection);
       // document.execCommand('insertImage', false, base64Url);
 

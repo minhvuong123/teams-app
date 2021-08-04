@@ -20,9 +20,12 @@ function Message({ message, currentUser }: any) {
           <div className="message-emoji"></div>
           <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
         </div>
-        <div className="message-body-content"
-          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
-        </div>
+        {
+          message.messages.slice(1, message.messages.length).length > 0
+          &&  <div className="message-body-content"
+            dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
+          </div>
+        }
       </div>
     </div>
     : <div className="customer-message">
@@ -36,9 +39,12 @@ function Message({ message, currentUser }: any) {
           <div className="message-emoji"></div>
           <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>
         </div>
-        <div className="message-body-content"
-          dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
-        </div>
+        {
+          message.messages.slice(1, message.messages.length).length > 0
+          &&  <div className="message-body-content"
+            dangerouslySetInnerHTML={{ __html: message.messages.slice(1, message.messages.length).join('') }}>
+          </div>
+        }
       </div>
     </div>
 )}

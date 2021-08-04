@@ -10,6 +10,7 @@ router.post('/', async function (req, res, next) {
 
     const populateFiles = files.map((file) => {
       return {
+        id: file.id,
         name: file.name,
         base64: file.base64.split(";base64,")[1],
         type: file.type,
@@ -20,29 +21,44 @@ router.post('/', async function (req, res, next) {
 
     const uploadsRedult = [];
 
-    for await (const [key, file] of populateFiles.entries()) {
+    for await (const file of populateFiles) {
       const result = new Promise((resolve, reject) => {
         require("fs").writeFile(file.uploadUrl, file.base64, 'base64', function (err) {
           if (!err) {
-            resolve({ key, status: 'success' });         
+            resolve({ id: file.id, status: true, name: file.name, url: file.dbUrl });         
           }
-          reject({ key, status: 'fault' });
+          reject({ id: file.id, status: false });
         });
       });
       
       uploadsRedult.push(await result);
     }
 
-    // const fileModel = new fileSchema({ conversationId, sender: user, text });
+    const uploadFault = uploadsRedult.some(u => !u.status);
 
-    // const result = await fileModel.save();
-    
-    if (uploadsRedult.length > 0) {
-      res.status(200).json({ result: uploadsRedult });
+    if (uploadFault) {
+      res.status(404).json({ file: 'upload is fault' });
       return;
-    } 
-  
-    res.status(404).json({ message: 'Information is error' });
+    }
+
+    const populateFileSave = uploadsRedult.map(file => {
+      return {
+        conversationId,
+        name: file.name,
+        url: file.url
+      }
+    });
+
+    for (const [key, file] of populateFileSave.entries()) {
+      const fileModel = new fileSchema(file);
+      const result = await fileModel.save();
+
+      if (!result || !result.conversationId) {
+        uploadsRedult[key].status = false;
+      }
+    }
+    
+    res.status(200).json({ files: uploadsRedult });
 
   } catch (error) {
     console.log(error);
