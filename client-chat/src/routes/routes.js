@@ -4,6 +4,7 @@ import { Route, Switch } from 'react-router-dom';
 import AppRegister from 'container/app-register/app-register';
 import ChatContent from 'container/app-content/app-content-chat/chat-content/chat-content';
 import AppNotFound from 'container/app-not-found/app-not-found';
+import ChatMessenger from 'container/app-content/app-content-chat/chat-content/chat-messenger/chat-messenger';
 
 const RouteWithSubRoutes = (route) => {
   return (
@@ -42,6 +43,14 @@ const Routes = [
         keyPath: '/conversation/:id',
         exact: false,
         component: ChatContent,
+        nested: [
+          {
+            path: '/conversation/:id/message',
+            keyPath: '/conversation/:id/message',
+            exact: false,
+            component: ChatMessenger,
+          }
+        ]
       }
     ]
   },

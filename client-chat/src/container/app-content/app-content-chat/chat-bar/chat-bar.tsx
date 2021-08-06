@@ -35,7 +35,7 @@ function ChatBar({ messageStore }: any) {
       if (!err) {
         setCurrentUser(decoded);
 
-        const conversationUrl = `${API_LINK}/conversation/${decoded._id}`;
+        const conversationUrl = `${API_LINK}/conversation/user/${decoded._id}`;
         const conversationResult = await axios.get(conversationUrl);
 
         const { data } = conversationResult || {};
