@@ -34,7 +34,7 @@ function Message({ message, currentUser }: any) {
       </div>
       <div className="message-body">
         <div className="message-body-title">
-          <span className="message-name">{message.sender.user_name}</span>
+          <span className="message-name">{message.sender.user_fullname}</span>
           <span className="message-timestamp">{timeAgo.format(new Date(message.createdAt))}</span>
           <div className="message-emoji"></div>
           <div className="message-first" dangerouslySetInnerHTML={{ __html: message.messages[0] }}></div>

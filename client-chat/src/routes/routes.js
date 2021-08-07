@@ -5,6 +5,7 @@ import AppRegister from 'container/app-register/app-register';
 import ChatContent from 'container/app-content/app-content-chat/chat-content/chat-content';
 import AppNotFound from 'container/app-not-found/app-not-found';
 import ChatMessenger from 'container/app-content/app-content-chat/chat-content/chat-messenger/chat-messenger';
+import ChatFiles from 'container/app-content/app-content-chat/chat-content/chat-files/chat-file';
 
 const RouteWithSubRoutes = (route) => {
   return (
@@ -49,6 +50,12 @@ const Routes = [
             keyPath: '/conversation/:id/message',
             exact: false,
             component: ChatMessenger,
+          },
+          {
+            path: '/conversation/:id/files',
+            keyPath: '/conversation/:id/files',
+            exact: false,
+            component: ChatFiles,
           }
         ]
       }

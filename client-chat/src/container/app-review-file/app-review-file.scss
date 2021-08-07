@@ -1,0 +1,21 @@
+.view-file-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  border: 0;
+  left: 0;
+  height: 100%;
+  .view-file-shadow {
+    background-color: #000;
+    padding: 50px;
+    height: inherit;
+    opacity: 0.3;
+  }
+  .view-file-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+  }
+}

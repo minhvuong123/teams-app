@@ -4,6 +4,21 @@ const path = require('path');
 const { rootPath } = require('../../utils');
 const fileSchema = require('../../models/file/file.model');
 
+router.get('/:conversationId', async function (req, res, next) {
+  try {
+    const { conversationId } = req.params;
+    
+    const files = await fileSchema.where({ conversationId });
+
+    res.status(200).json({ files: files });
+
+  } catch (error) {
+    console.log(error);
+    next(error);
+    res.status(500).json({ message: 'Server error' })
+  }
+});
+
 router.post('/', async function (req, res, next) {
   try {
     const { conversationId, files } = req.body.files;
@@ -14,6 +29,7 @@ router.post('/', async function (req, res, next) {
         name: file.name,
         base64: file.base64.split(";base64,")[1],
         type: file.type,
+        size: file.size,
         uploadUrl: `${path.join(rootPath, 'public/files')}\\${file.name}`,
         dbUrl: `static/files/${file.name}`
       }
@@ -25,7 +41,7 @@ router.post('/', async function (req, res, next) {
       const result = new Promise((resolve, reject) => {
         require("fs").writeFile(file.uploadUrl, file.base64, 'base64', function (err) {
           if (!err) {
-            resolve({ id: file.id, status: true, name: file.name, url: file.dbUrl });         
+            resolve({ id: file.id, status: true, name: file.name, type: file.type, size: file.size, url: file.dbUrl });         
           }
           reject({ id: file.id, status: false });
         });
@@ -45,6 +61,8 @@ router.post('/', async function (req, res, next) {
       return {
         conversationId,
         name: file.name,
+        type: file.type,
+        size: file.size,
         url: file.url
       }
     });

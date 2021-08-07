@@ -9,8 +9,10 @@ import { isEmpty } from 'lodash';
 
 import AppTextEditor from 'container/app-text-editor/app-text-editor';
 import { groupMessage } from 'shared/calculator';
-import Message from '../message/message';
+import Message from './message/message';
 import { setMessage } from 'shared/redux/actions';
+
+import './chat-messenger.scss';
 
 function ChatMessenger({ location, socket, setMessageStore  }: any) {
   const [text, setText] = useState('');
@@ -25,13 +27,16 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
 
   // listen to arrival message
   useEffect(() => {
+    let mounted = true;
     socket.on('client-get-message', (message: MessageModel) => {
-      setArrivalMessage(message);
-      setMessageStore(message);
+      if(mounted){ // not update if unmount
+        setArrivalMessage(message);
+        setMessageStore(message);
+      }
     })
 
-    return () => { }
-  }, [socket, setMessageStore]);
+    return () => { mounted = false }
+  }, [socket]);
 
   // update arrival message to messsages
   useEffect(() => {
@@ -49,7 +54,6 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
       } else {
         messagesTemp.push(arrivalMessage);
       }
-
       setMessages(messagesTemp);
     }
 
@@ -60,14 +64,13 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
     const token = window.sessionStorage.getItem('token');
     jwt.verify(token as string, 'kiwi', async function (err, decoded: any) {
       if (!err) {
+        setCurrentUser(decoded);
 
         // emit leave-room currently
         socket.emit('leave-room');
 
         // emit join-room flat
         socket.emit('join-room', { conversationId: conversation._id, userId: decoded._id });
-
-        setCurrentUser(decoded);
 
         const messagesUrl = `${API_LINK}/messages/${conversation._id}`;
         const messageResult = await axios.get(messagesUrl);
@@ -87,7 +90,7 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
   }, [conversation._id]);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({
+    !isEmpty(messages) && scrollRef.current?.scrollIntoView({
       block: 'end',
       behavior: 'smooth',
       inline: 'center'
@@ -115,6 +118,7 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
         name: image.dataset.name || '',
         base64: image.getAttribute('src') || '',
         type: image.dataset.type || '',
+        size: image.dataset.size || 0,
       }
     });
 
@@ -155,7 +159,10 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
             messages: [text],
             sender: {
               user_avatar: currentUser.user_avatar,
-              user_name: currentUser.user_name,
+              user_firstname: currentUser.user_firstname,
+              user_lastname: currentUser.user_lastname,
+              user_fullname: currentUser.user_fullname,
+              user_background_color: currentUser.user_background_color,
               _id: currentUser._id,
             }
           } as MessageModel
@@ -178,8 +185,7 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
           socket.emit('client-send-message', message);
         }
       }
-    }
-    )
+    })
   }
 
   function onChangeEditor(value: string): void {
@@ -211,6 +217,8 @@ function ChatMessenger({ location, socket, setMessageStore  }: any) {
         <AppTextEditor
           wrapName="editor-wrap"
           textClass="editor-text"
+          valueClass=""
+          valueTabName="div"
           placeholder="message ..."
           isClose={isCloseEditor}
           onClose={onClose}

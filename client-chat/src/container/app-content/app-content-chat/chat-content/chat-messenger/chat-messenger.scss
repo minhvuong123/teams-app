@@ -1,0 +1,90 @@
+.chat-content-message {
+    height: calc(100% - 6rem);
+    display: flex;
+    flex-direction: column;
+    .message-content-container {
+      max-width: 90.8rem;
+      margin: auto;
+      width: 85%;
+      overflow: hidden;
+      overflow-y: auto;
+      flex-grow: 1;
+      &::-webkit-scrollbar
+      {
+        width: 5px;
+      }
+      &::-webkit-scrollbar-thumb
+      {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+        background-color: #e2e2e2;
+      }
+      .message-content {
+        flex: 1;
+        margin: auto;
+        max-width: 90.8rem;
+        padding-left: 50px;
+      }
+    }
+    .message-editor {
+      max-width: 90.8rem;
+      margin: auto;
+      width: 85%;
+      .editor-wrap {
+        padding: .6rem 0 .3rem;     
+        margin: auto;
+        margin-left: 50px;
+      }
+      .quill {
+        background-color: #fff;
+        padding: .6rem 0 .3rem;
+        margin: 0 6rem;
+        .ql-toolbar {
+          text-align: center;
+          border: unset;
+        }
+        .ql-container {
+          border: unset;
+        }
+      }
+      .extension-icon {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 1rem;
+        padding: .6rem 0 .3rem; 
+        margin: auto;
+        margin-left: 50px;
+        .sub-icons {
+          font-size: 2rem;
+          padding: 1rem;
+          display: inline-block;
+          line-height: 1;
+          cursor: pointer;
+          &:hover{
+            color: #464775;
+          }
+        }
+      }
+      .textarea {
+        border: 1px solid #ccc;
+        font-family: inherit;
+        font-size: inherit;
+        padding: .5rem 1rem;
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        resize: none;
+        min-height: 3rem;
+        line-height: 2rem;
+        max-height: 20rem;
+        word-break: break-all;
+        .textarea[contenteditable]:empty::before {
+          content: "Placeholder still possible";
+          color: gray;
+        }
+        &:focus {
+          outline: unset;
+        }
+      }
+    }
+  }

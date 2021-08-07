@@ -5,6 +5,7 @@ import { getAvatarColor, getAvatarText, getNameChanel } from 'shared/calculator'
 import jwt from 'jsonwebtoken';
 import { isEmpty } from 'lodash';
 import Routes, { RenderRoutes } from 'routes/routes';
+import { NavLink } from 'react-router-dom';
 
 function ChatContent({ location }: any) {
   const [nestedRoutes, setNestedRoutes] = useState([]);
@@ -12,12 +13,12 @@ function ChatContent({ location }: any) {
 
   const { conversation } = location.state;
 
-  useEffect(() => { 
+  useEffect(() => {
     const nestRoutes = Routes.find(route => route.path === '/conversation')?.nested;
     const subNestRoutes = nestRoutes?.find(route => route.path === '/conversation/:id')?.nested;
     setNestedRoutes(subNestRoutes as any || []);
 
-    return () => {}
+    return () => { }
   }, [])
 
   useEffect(() => {
@@ -53,7 +54,20 @@ function ChatContent({ location }: any) {
         </div>
         <div className="header-tabs-bar-wrapper">
           <ul className="tabs-bar-list">
-            <li className="tabs-bar-item active"><a href="/">Chat</a></li>
+            <li className="tabs-bar-item">
+              <NavLink to={{
+                pathname: `/conversation/${conversation._id}/message`,
+                state: { conversation }
+              }}
+              >Chat</NavLink>
+            </li>
+            <li className="tabs-bar-item">
+              <NavLink to={{
+                pathname: `/conversation/${conversation._id}/files`,
+                state: { conversation }
+              }}
+              >Files</NavLink>
+            </li>
           </ul>
         </div>
       </div>

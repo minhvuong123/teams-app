@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
   .message-avatar {
     min-width: 32px;
     height: 32px;
@@ -12,10 +13,11 @@
     justify-content: center;
     line-height: 32;
     color: #fff;
+    position: absolute;
+    right: 100%;
   }
   .message-body {
     flex-grow: 1;
-    padding-right: 4.2rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -86,8 +88,6 @@
   margin-bottom: 20px;
   .message-body {
     flex-grow: 1;
-    padding-left: 4.2rem;
-    padding-right: 4.2rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

@@ -24,8 +24,9 @@ import {
 
 import './app-text-editor.scss';
 
-function AppTextEditor({ value, wrapName, textClass, placeholder, isClose, onChange, onClose }: any) {
+function AppTextEditor({ value, wrapName, textClass, valueClass, valueTabName, placeholder, isClose, onChange, onClose, onSend }: any) {
   const [previousNode, setPreviousNode] = useState<string>('');
+  const [content, setContent] = useState<string>('');
 
   const [isBold, setIsBold] = useState<boolean>(false);
   const [isItalic, setIsItalic] = useState<boolean>(false);
@@ -97,7 +98,7 @@ function AppTextEditor({ value, wrapName, textClass, placeholder, isClose, onCha
 
     for await (const file of files) {
       const base64Url = await getBase64(file) as any;
-      const wrappedselection = `<img data-id="${uuid()}" data-name="${file.name}" data-type="${file.type}" src="${base64Url}" >`;
+      const wrappedselection = `<img data-id="${uuid()}" data-name="${file.name}" data-type="${file.type}" data-size="${file.size}" src="${base64Url}" >`;
       document.execCommand('insertHTML', false, wrappedselection);
       // document.execCommand('insertImage', false, base64Url);
 
@@ -124,13 +125,15 @@ function AppTextEditor({ value, wrapName, textClass, placeholder, isClose, onCha
 
   function onChangeEditor(event: any): void {
     const value = event.target.innerHTML;
+    const valueParserHtml = `<${valueTabName} class="${valueClass}">${value}</${valueTabName}>`;
 
     if(!value) { 
       setIsInsertOrderedList(false);
       setIsInsertUnOrderedList(false);
     }
 
-    onChange(value);
+    // setContent(value);
+    onChange(valueParserHtml);
   }
 
   function onKeyDownEditor(event: any): void {

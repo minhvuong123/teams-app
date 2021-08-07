@@ -170,11 +170,14 @@ router.post('/sign-in', async function (req, res, next) {
       if (match) {
         const userPopulate = {
           _id: user._id,
-          user_name: user.user_name,
+          user_firstname: user.user_firstname,
+          user_lastname: user.user_lastname,
+          user_fullname: user.user_fullname,
           user_avatar: user.user_avatar,
           user_role: user.user_role,
           user_email: user.user_email,
-          user_phone: user.user_phone,      
+          user_phone: user.user_phone,  
+          user_background_color: user.user_background_color,
           createdAt: user.createdAt
         };
 
